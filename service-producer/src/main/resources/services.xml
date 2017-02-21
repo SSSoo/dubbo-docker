@@ -11,7 +11,10 @@
     <dubbo:protocol name="dubbo" port="20880" />
 
     <dubbo:service interface="com.example.service.Greetings" ref="greetingService"/>
+    <dubbo:service interface="com.example.service.api.IMobPushMsgService" ref="mobPushMsgService" retries="3" timeout="10000" validation="true"/>
 
     <bean id="greetingService" class="com.example.service.producer.GreetingsImpl" />
+    <bean id="mobPushMsgService" class="com.example.service.producer.api.impl.MobPushMsgServiceImpl" />
+
 
 </beans>

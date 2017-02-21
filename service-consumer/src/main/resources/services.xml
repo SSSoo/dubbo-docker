@@ -9,5 +9,7 @@
     <dubbo:registry protocol="zookeeper" address="${ZOOKEEPER_SERVER}:2181" />
 
     <dubbo:reference id="greetingService" interface="com.example.service.Greetings" />
+    <dubbo:reference id="mobPosAdService" interface="com.example.service.api.IMobPushMsgService" validation="true"/>
+
 
 </beans>
