@@ -6,7 +6,8 @@
 
     <dubbo:application name="producer-app" />
 
-    <dubbo:registry protocol="zookeeper" address="${ZOOKEEPER_SERVER}:2181" />
+    <dubbo:registry protocol="zookeeper" address="127.0.0.1:2181" />
+    <!--<dubbo:registry protocol="zookeeper" address="${ZOOKEEPER_SERVER}:2181" />-->
 
     <dubbo:protocol name="dubbo" port="20880" />
 

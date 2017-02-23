@@ -41,9 +41,9 @@ public class Application {
         MobPushMsgQueryParams params = new MobPushMsgQueryParams();
         try {
             params.setStartDate(sdf.parse("20150101"));
-            params.setPushId(-1);
-            params.setPushName("阿里云");
-            params.setSspName("nnn");
+            params.setPushId(10);
+            params.setPushName("为什么年轻人越来越穷");
+            params.setSspName("阿里巴巴YunOS平台");
             params.setEndDate(sdf.parse("20161231"));
         } catch (ParseException e) {
             e.printStackTrace();

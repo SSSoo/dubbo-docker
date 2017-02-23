@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation=" 
+          http://www.springframework.org/schema/beans 
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+          http://www.springframework.org/schema/tx 
+          http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+          http://www.springframework.org/schema/context 
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd 
+          http://www.springframework.org/schema/aop 
+          http://www.springframework.org/schema/aop/spring-aop-3.0.xsd"
+	default-autowire="byName" default-lazy-init="true">
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath*:/dina-mobile-tools-db.properties</value>
+				<value>classpath*:/redis.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<context:annotation-config/>
+ 	<!-- 声明通过注解定义bean，同时也通过注解自动注入 -->
+	<context:component-scan base-package="com.example.service.producer">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	
+	<!-- 主库配置 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		init-method="init" destroy-method="close">
+		<!-- 数据库基本信息配置 -->
+		<property name="driverClassName" value="${dina.db.driver}" />
+		<property name="url" value="${dina.db.url}" />
+		<property name="username" value="${dina.db.user}" />
+		<property name="password" value="${dina.db.pwd}" />
+		<!-- 初始化连接数量 -->
+		<property name="initialSize" value="${dina.db.initialSize}" />
+		<!-- 最大并发连接数 -->
+		<property name="maxActive" value="${dina.db.maxActive}" />
+		<!-- 最小空闲连接数 -->
+		<property name="minIdle" value="${dina.db.minIdle}" />
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="${dina.db.maxWait}" />
+		<!-- 超过时间限制是否回收 -->
+		<property name="removeAbandoned" value="${dina.db.removeAbandoned}" />
+		<!-- 超过时间限制多长； -->
+		<property name="removeAbandonedTimeout" value="${dina.db.removeAbandonedTimeout}" />
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="${dina.db.timeBetweenEvictionRunsMillis}" />
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="${dina.db.minEvictableIdleTimeMillis}" />
+		<!-- 用来检测连接是否有效的sql，要求是一个查询语句 -->
+		<property name="validationQuery" value="${dina.db.validationQuery}" />
+		<!-- 申请连接的时候检测 -->
+		<property name="testWhileIdle" value="${dina.db.testWhileIdle}" />
+		<!-- 申请连接时执行validationQuery检测连接是否有效，配置为true会降低性能 -->
+		<property name="testOnBorrow" value="${dina.db.testOnBorrow}" />
+		<!-- 归还连接时执行validationQuery检测连接是否有效，配置为true会降低性能 -->
+		<property name="testOnReturn" value="${dina.db.testOnReturn}" />
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<property name="poolPreparedStatements" value="${dina.db.poolPreparedStatements}" />
+		<property name="maxPoolPreparedStatementPerConnectionSize"
+			value="${dina.db.maxPoolPreparedStatementPerConnectionSize}" />
+		<!--属性类型是字符串，通过别名的方式配置扩展插件，常用的插件有： 监控统计用的filter:stat 日志用的filter:log4j 防御SQL注入的filter:wall -->
+		<property name="filters" value="${dina.db.filters}" />
+	</bean>
+	
+
+	<!-- JDBC模板 -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate ">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!--事务模板 -->
+	<bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">  
+		<property name="transactionManager">  
+			<ref local="transactionManager"/>  
+		</property>  
+	</bean>
+	
+	<!-- jdbc事务管理器 --> 
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- 方式一 (用注解来实现事务管理) -->
+	<!-- <tx:annotation-driven transaction-manager="transactionManager"/> --> 
+
+	<!-- 方式二 (自动代理)-->
+	<bean id="txProxy"  class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+		<property name="beanNames">
+			<list>
+				<value>*ServiceImpl</value>
+			</list>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>transactionInterceptor</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="transactionInterceptor" class="org.springframework.transaction.interceptor.TransactionInterceptor"> 
+		<property name="transactionManager"> 
+			<ref bean="transactionManager" /> 
+		</property>
+		<property name="transactionAttributes"> 
+			<props> 
+				<prop key="*trans">PROPAGATION_REQUIRED,-Exception</prop> 
+				<prop key="*add">PROPAGATION_REQUIRED,-Exception</prop> 
+				<prop key="*recharge">PROPAGATION_REQUIRED,-Exception</prop> 
+				<prop key="*cost">PROPAGATION_REQUIRED,-Exception</prop> 
+				<prop key="*">PROPAGATION_NOT_SUPPORTED, readOnly</prop>
+			</props> 
+		</property> 
+	</bean>
+	
+	<!-- 单个redis线程池 -->
+	<bean name="redisPoolDataSource" class="com.sina.ad.tools.redis.RedisPoolDataSource">
+		<constructor-arg name="host" value="${redis.host}"/>
+		<constructor-arg name="port" value="${redis.port}"/>
+		<constructor-arg name="password" value="${redis.password}"/>
+	</bean>
+	
+	<bean name="redis" class="com.sina.ad.tools.redis.Redis">
+		<constructor-arg name="redisPoolDataSource" ref="redisPoolDataSource"/>
+		<property name="name" value="local-fuyi-provider-test" />
+		<property name="expired" value="${redis.expired}"/>
+	</bean>
+	
+	
+</beans>

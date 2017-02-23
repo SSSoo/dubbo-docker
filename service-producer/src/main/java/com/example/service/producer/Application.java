@@ -5,10 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
 
 /**
- * Created by libin on 9/19/16.
+ * Created by guiqiang on 02/13/17.
  */
 @SpringBootApplication
-@ImportResource({"classpath:services.xml"})
+@ImportResource({"classpath:services.xml","classpath:applicationContext.xml"})
 public class Application {
     public static void main(String[] args) throws Exception{
         SpringApplication.run(Application.class, args);
